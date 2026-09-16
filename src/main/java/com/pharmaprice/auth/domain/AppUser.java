@@ -48,4 +48,9 @@ public class AppUser extends BaseTimeEntity {
 	@Column(name = "report_count", nullable = false)
 	@Builder.Default
 	private int reportCount = 0;
+
+	/** 가격 제보 저장과 같은 트랜잭션에서 호출한다 (docs/ROADMAP.md T-26). */
+	public void incrementReportCount() {
+		this.reportCount++;
+	}
 }
