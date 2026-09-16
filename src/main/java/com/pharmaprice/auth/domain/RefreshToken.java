@@ -40,4 +40,13 @@ public class RefreshToken extends BaseCreatedAtEntity {
 
 	@Column(name = "revoked_at")
 	private Instant revokedAt;
+
+	/** rotation(재발급) 및 로그아웃에서 공통으로 쓴다 (docs/ROADMAP.md T-24). */
+	public void revoke() {
+		this.revokedAt = Instant.now();
+	}
+
+	public boolean isValid() {
+		return revokedAt == null && expiresAt.isAfter(Instant.now());
+	}
 }

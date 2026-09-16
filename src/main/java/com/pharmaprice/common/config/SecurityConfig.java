@@ -23,9 +23,10 @@ import com.pharmaprice.auth.security.JwtAuthenticationEntryPoint;
 import com.pharmaprice.auth.security.JwtAuthenticationFilter;
 
 /**
- * JWT 기반 인증/인가 (docs/ROADMAP.md T-23). 세션을 쓰지 않는 stateless 구성이라
- * {@link UsernamePasswordAuthenticationToken} 앞에 {@link JwtAuthenticationFilter}
- * 를 끼워 넣어 Authorization 헤더만으로 인증 정보를 채운다.
+ * JWT 기반 인증/인가 (docs/ROADMAP.md T-23, T-24). 세션을 쓰지 않는 stateless
+ * 구성이라 {@link UsernamePasswordAuthenticationFilter} 앞에
+ * {@link JwtAuthenticationFilter} 를 끼워 넣어 Authorization 헤더만으로 인증
+ * 정보를 채운다.
  */
 @Configuration
 @EnableMethodSecurity
@@ -60,7 +61,9 @@ public class SecurityConfig {
 								"/actuator/**",
 								"/error") // 없으면 컨트롤러 500이 /error 포워드에서 401/403으로 둔갑해 원인 파악이 어려워진다.
 						.permitAll()
-						.requestMatchers("/api/v1/auth/**").permitAll()
+						.requestMatchers(HttpMethod.POST,
+								"/api/v1/auth/signup", "/api/v1/auth/login", "/api/v1/auth/refresh")
+						.permitAll()
 						.requestMatchers(HttpMethod.GET,
 								"/api/v1/drugs/**", "/api/v1/regions/**", "/api/v1/search/**", "/api/v1/pharmacies/**")
 						.permitAll()
