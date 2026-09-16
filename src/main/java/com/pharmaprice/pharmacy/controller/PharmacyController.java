@@ -12,6 +12,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.pharmaprice.common.dto.PageResponse;
 import com.pharmaprice.pharmacy.dto.PharmacyDetailResponse;
 import com.pharmaprice.pharmacy.dto.PharmacySummaryResponse;
+import com.pharmaprice.pharmacy.dto.PriceHistoryResponse;
 import com.pharmaprice.pharmacy.exception.PharmacyNotFoundException;
 import com.pharmaprice.pharmacy.repository.PharmacyQueryRepository;
 import com.pharmaprice.recommendation.distance.HaversineDistanceCalculator;
@@ -23,6 +24,8 @@ public class PharmacyController {
 
 	private static final int MAX_RADIUS_M = 10_000;
 	private static final int MAX_PAGE_SIZE = 50;
+	private static final int DEFAULT_HISTORY_DAYS = 180;
+	private static final int MAX_HISTORY_DAYS = 365;
 
 	private final PharmacyQueryRepository pharmacyQueryRepository;
 
@@ -63,6 +66,17 @@ public class PharmacyController {
 		}
 		return pharmacyQueryRepository.findDetail(pharmacyId, lat, lng)
 				.orElseThrow(() -> new PharmacyNotFoundException(pharmacyId));
+	}
+
+	// docs/ROADMAP.md T-20. flagged=true 인 제보도 포함해 그대로 내려준다 — 이상치
+	// 처리를 프론트에 드러내는 유일한 지점이라 서버에서 걸러내면 안 된다.
+	@GetMapping("/{pharmacyId}/drugs/{drugId}/history")
+	public PriceHistoryResponse getHistory(
+			@PathVariable long pharmacyId,
+			@PathVariable long drugId,
+			@RequestParam(defaultValue = "" + DEFAULT_HISTORY_DAYS) int days) {
+		int clampedDays = Math.clamp(days, 1, MAX_HISTORY_DAYS);
+		return pharmacyQueryRepository.findPriceHistory(pharmacyId, drugId, clampedDays);
 	}
 
 	private static void validateCoordinate(double lat, double lng) {

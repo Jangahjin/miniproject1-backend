@@ -18,6 +18,8 @@ import com.pharmaprice.pharmacy.domain.Region;
 import com.pharmaprice.pharmacy.dto.PharmacyDetailResponse;
 import com.pharmaprice.pharmacy.dto.PharmacyDetailResponse.DrugPriceItem;
 import com.pharmaprice.pharmacy.dto.PharmacySummaryResponse;
+import com.pharmaprice.pharmacy.dto.PriceHistoryResponse;
+import com.pharmaprice.pharmacy.dto.PriceHistoryResponse.PricePoint;
 import com.pharmaprice.pharmacy.dto.RegionRefResponse;
 import com.pharmaprice.recommendation.distance.DistanceCalculator;
 
@@ -98,6 +100,31 @@ public class PharmacyQueryRepository {
 				""";
 		return jdbcTemplate.query(sql, new MapSqlParameterSource("pharmacyId", pharmacyId),
 				PharmacyQueryRepository::mapDrugPrice);
+	}
+
+	// docs/ROADMAP.md T-20. 약국 존재 여부와 무관하게 이력이 없으면 빈 배열 + 200을
+	// 반환한다 — pharmacy_id/drug_id 유효성은 검사하지 않는다.
+	public PriceHistoryResponse findPriceHistory(long pharmacyId, long drugId, int days) {
+		String sql = """
+				SELECT purchased_at, price, flagged
+				FROM price_report
+				WHERE pharmacy_id = :pharmacyId
+				  AND drug_id = :drugId
+				  AND status <> 'HIDDEN'
+				  AND purchased_at >= CURRENT_DATE - :days
+				ORDER BY purchased_at ASC
+				""";
+		MapSqlParameterSource params = new MapSqlParameterSource()
+				.addValue("pharmacyId", pharmacyId)
+				.addValue("drugId", drugId)
+				.addValue("days", days);
+		List<PricePoint> points = jdbcTemplate.query(sql, params, PharmacyQueryRepository::mapPricePoint);
+		return new PriceHistoryResponse(pharmacyId, drugId, points);
+	}
+
+	private static PricePoint mapPricePoint(ResultSet rs, int rowNum) throws SQLException {
+		return new PricePoint(
+				rs.getObject("purchased_at", LocalDate.class), rs.getInt("price"), rs.getBoolean("flagged"));
 	}
 
 	private static DrugPriceItem mapDrugPrice(ResultSet rs, int rowNum) throws SQLException {

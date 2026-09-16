@@ -31,11 +31,15 @@ class PharmacyControllerTest extends AbstractIntegrationTest {
 	JdbcTemplate jdbcTemplate;
 
 	Long pharmacyIdWithStats;
+	Long drugIdWithHistory;
 
 	@BeforeEach
 	void setUp() {
 		pharmacyIdWithStats = jdbcTemplate.queryForObject(
 				"SELECT pharmacy_id FROM pharmacy_drug_price_stat ORDER BY pharmacy_id LIMIT 1", Long.class);
+		drugIdWithHistory = jdbcTemplate.queryForObject(
+				"SELECT drug_id FROM pharmacy_drug_price_stat WHERE pharmacy_id = ? ORDER BY drug_id LIMIT 1",
+				Long.class, pharmacyIdWithStats);
 	}
 
 	@Test
@@ -95,5 +99,44 @@ class PharmacyControllerTest extends AbstractIntegrationTest {
 	void 존재하지_않는_약국은_404를_반환한다() throws Exception {
 		mockMvc.perform(get("/api/v1/pharmacies/{id}", 9_999_999L))
 				.andExpect(status().isNotFound());
+	}
+
+	@Test
+	void 가격_이력_응답에_flagged_항목이_포함된다() throws Exception {
+		mockMvc.perform(get(
+						"/api/v1/pharmacies/{pharmacyId}/drugs/{drugId}/history",
+						pharmacyIdWithStats, drugIdWithHistory))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.pharmacyId").value(pharmacyIdWithStats))
+				.andExpect(jsonPath("$.drugId").value(drugIdWithHistory))
+				.andExpect(jsonPath("$.points.length()", greaterThan(0)))
+				.andExpect(jsonPath("$.points[0].flagged").exists());
+	}
+
+	@Test
+	void days를_좁히면_결과가_줄어든다() throws Exception {
+		String wide = mockMvc.perform(get(
+						"/api/v1/pharmacies/{pharmacyId}/drugs/{drugId}/history",
+						pharmacyIdWithStats, drugIdWithHistory).param("days", "365"))
+				.andExpect(status().isOk())
+				.andReturn().getResponse().getContentAsString();
+		String narrow = mockMvc.perform(get(
+						"/api/v1/pharmacies/{pharmacyId}/drugs/{drugId}/history",
+						pharmacyIdWithStats, drugIdWithHistory).param("days", "1"))
+				.andExpect(status().isOk())
+				.andReturn().getResponse().getContentAsString();
+
+		List<Object> widePoints = JsonPath.read(wide, "$.points");
+		List<Object> narrowPoints = JsonPath.read(narrow, "$.points");
+		assertThat(narrowPoints.size()).isLessThan(widePoints.size());
+	}
+
+	@Test
+	void 이력이_없어도_빈_배열과_200을_반환한다() throws Exception {
+		mockMvc.perform(get(
+						"/api/v1/pharmacies/{pharmacyId}/drugs/{drugId}/history",
+						9_999_999L, 9_999_999L))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.points.length()").value(0));
 	}
 }
