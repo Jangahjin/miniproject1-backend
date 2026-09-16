@@ -111,7 +111,7 @@ class EntityPersistenceTest extends AbstractIntegrationTest {
 	@Test
 	void appUser_저장_조회_enum_role_status() {
 		AppUser user = appUserRepository.save(AppUser.builder()
-				.email("user01@example.com").passwordHash("hash")
+				.email("test-user01@example.com").passwordHash("hash")
 				.nickname("닉네임").build());
 		Long id = user.getId();
 		em.flush();
@@ -131,7 +131,7 @@ class EntityPersistenceTest extends AbstractIntegrationTest {
 	@Test
 	void refreshToken_저장_조회() {
 		AppUser user = appUserRepository.save(AppUser.builder()
-				.email("user02@example.com").passwordHash("hash").nickname("닉네임2").build());
+				.email("test-user02@example.com").passwordHash("hash").nickname("닉네임2").build());
 
 		RefreshToken token = refreshTokenRepository.save(RefreshToken.builder()
 				.user(user).tokenHash("hash-value").expiresAt(Instant.now().plusSeconds(3600)).build());
@@ -147,7 +147,7 @@ class EntityPersistenceTest extends AbstractIntegrationTest {
 	@Test
 	void uploadedFile_저장_조회() {
 		AppUser user = appUserRepository.save(AppUser.builder()
-				.email("user03@example.com").passwordHash("hash").nickname("닉네임3").build());
+				.email("test-user03@example.com").passwordHash("hash").nickname("닉네임3").build());
 
 		UploadedFile file = uploadedFileRepository.save(UploadedFile.builder()
 				.originalName("receipt.jpg").storedPath("uploads/2026/09/uuid.jpg")
