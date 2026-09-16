@@ -82,7 +82,7 @@ public class PharmacyQueryRepository {
 	// 표현이 번거로워 native SQL을 쓴다 (docs/ROADMAP.md T-13의 DrugQueryRepository와 같은 이유).
 	private List<DrugPriceItem> findDrugPrices(long pharmacyId) {
 		String sql = """
-				SELECT d.id AS drug_id, d.display_name, d.package_unit,
+				SELECT d.id AS drug_id, d.display_name, d.package_unit, d.category,
 				       s.rep_price, s.min_price, s.max_price, s.avg_price,
 				       s.report_count, s.last_reported_at,
 				       nat.national_avg_price
@@ -105,6 +105,7 @@ public class PharmacyQueryRepository {
 		int nationalAvgPrice = rs.getInt("national_avg_price");
 		return new DrugPriceItem(
 				rs.getLong("drug_id"), rs.getString("display_name"), rs.getString("package_unit"),
+				rs.getString("category"),
 				repPrice, rs.getInt("min_price"), rs.getInt("max_price"), rs.getInt("avg_price"),
 				rs.getInt("report_count"), rs.getObject("last_reported_at", LocalDate.class),
 				nationalAvgPrice, repPrice - nationalAvgPrice);

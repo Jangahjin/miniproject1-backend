@@ -14,7 +14,7 @@ public record PharmacyDetailResponse(
 
 	/** {@code repPrice} 오름차순으로 정렬해 내려준다. */
 	public record DrugPriceItem(
-			long drugId, String displayName, String packageUnit,
+			long drugId, String displayName, String packageUnit, String category,
 			int repPrice, int minPrice, int maxPrice, int avgPrice,
 			int reportCount, LocalDate lastReportedAt,
 			Integer nationalAvgPrice, Integer diffFromNationalAvg) {
