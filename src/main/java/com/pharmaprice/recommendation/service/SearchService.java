@@ -189,18 +189,28 @@ public class SearchService {
 		return hasSeed ? "SEED" : "USER";
 	}
 
-	/** 반경을 한 단계 넓혔을 때의 예상 건수를 실제로 계산해서 내려준다 (docs/PRD.md F3-9). */
+	/**
+	 * 반경을 넓혔을 때의 예상 건수를 실제로 계산해서 내려준다 (docs/PRD.md F3-9).
+	 * 바로 다음 단계만 보면 그 단계도 0건일 수 있어 "5km로 넓히면 0곳"처럼 무의미한
+	 * 제안이 나간다 — 결과가 실제로 있는 첫 단계를 찾을 때까지 남은 반경을
+	 * 순서대로 시도하고, 5km(최대)까지도 없으면 제안 자체를 비운다.
+	 */
 	private SearchResponse.Suggestion buildSuggestion(long drugId, Location location, int radius) {
 		int currentIndex = ALLOWED_RADII.indexOf(radius);
-		if (currentIndex < 0 || currentIndex == ALLOWED_RADII.size() - 1) {
-			return null; // 이미 최대 반경이면 더 확대할 수 없다.
+		if (currentIndex < 0) {
+			return null;
 		}
-		int nextRadius = ALLOWED_RADII.get(currentIndex + 1);
-		BoundingBox biggerBox = distanceCalculator.boundingBox(location.lat(), location.lng(), nextRadius);
-		long estimatedCount = searchQueryRepository
-				.findCandidates(drugId, location.lat(), location.lng(), biggerBox, nextRadius)
-				.size();
-		return new SearchResponse.Suggestion("EXPAND_RADIUS", nextRadius, estimatedCount);
+		for (int i = currentIndex + 1; i < ALLOWED_RADII.size(); i++) {
+			int candidateRadius = ALLOWED_RADII.get(i);
+			BoundingBox box = distanceCalculator.boundingBox(location.lat(), location.lng(), candidateRadius);
+			long estimatedCount = searchQueryRepository
+					.findCandidates(drugId, location.lat(), location.lng(), box, candidateRadius)
+					.size();
+			if (estimatedCount > 0) {
+				return new SearchResponse.Suggestion("EXPAND_RADIUS", candidateRadius, estimatedCount);
+			}
+		}
+		return null; // 최대 반경까지 넓혀도 결과가 없다 — 더 이상 제안할 게 없다.
 	}
 
 	private SearchResponse.DrugSummary toDrugSummary(Drug drug) {

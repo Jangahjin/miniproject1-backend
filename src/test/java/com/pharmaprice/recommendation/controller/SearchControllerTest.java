@@ -86,9 +86,11 @@ class SearchControllerTest extends AbstractIntegrationTest {
 
 	@Test
 	void 결과가_없으면_suggestion의_estimatedCount가_실제_확대반경_건수와_일치한다() throws Exception {
+		// 서울 도심이지만 500m 안에는 없고 1000m로 넓히면 실제로 결과가 잡히는 좌표.
+		// buildSuggestion()이 "바로 다음 단계"에 진짜 결과가 있는 경우를 올바르게 찾아내는지 검증한다.
 		String zeroBody = mockMvc.perform(get("/api/v1/search")
 						.param("drugId", String.valueOf(drugId))
-						.param("lat", "33.5").param("lng", "126.5").param("radius", "500")) // 제주 — 시드 데이터가 없는 지역
+						.param("lat", "37.5600").param("lng", "126.9780").param("radius", "500"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.summary.resultCount").value(0))
 				.andExpect(jsonPath("$.suggestion.type").value("EXPAND_RADIUS"))
@@ -99,11 +101,23 @@ class SearchControllerTest extends AbstractIntegrationTest {
 
 		String expandedBody = mockMvc.perform(get("/api/v1/search")
 						.param("drugId", String.valueOf(drugId))
-						.param("lat", "33.5").param("lng", "126.5").param("radius", "1000"))
+						.param("lat", "37.5600").param("lng", "126.9780").param("radius", "1000"))
 				.andReturn().getResponse().getContentAsString();
 		int actualCount = JsonPath.read(expandedBody, "$.summary.resultCount");
 
 		assertThat(estimatedCount).isEqualTo(actualCount);
+	}
+
+	@Test
+	void 최대_반경까지_넓혀도_결과가_없으면_suggestion이_비어있다() throws Exception {
+		// 제주 — 시드 데이터가 전혀 없는 지역이라 5km까지 넓혀도 0건이다.
+		// 이 경우 "반경을 넓히면 N곳이 있습니다" 같은 무의미한 제안을 내려주지 않아야 한다.
+		mockMvc.perform(get("/api/v1/search")
+						.param("drugId", String.valueOf(drugId))
+						.param("lat", "33.5").param("lng", "126.5").param("radius", "500"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.summary.resultCount").value(0))
+				.andExpect(jsonPath("$.suggestion").doesNotExist());
 	}
 
 	@Test
