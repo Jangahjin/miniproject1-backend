@@ -46,7 +46,13 @@ public class AdminStatsRepository {
 		long reportCount = queryLong("SELECT COUNT(*) FROM price_report");
 		long userCount = queryLong("SELECT COUNT(*) FROM app_user");
 		long coveredPairCount = queryLong("SELECT COUNT(*) FROM pharmacy_drug_price_stat");
-		long flaggedReportCount = queryLong("SELECT COUNT(*) FROM price_report WHERE flagged = true");
+		// status = 'ACTIVE'로 한정한다 — HIDDEN 처리된 제보까지 세면 관리자가 T-32에서
+		// 아무리 조치해도(flagged 컬럼 자체는 안 건드리므로) 이 수치가 줄어들지 않아,
+		// "숨김 처리 후 KPI가 갱신된다"(T-33 완료 판정)를 만족하지 못한다. 이 값은
+		// "아직 검토가 필요한 이상치 수"를 의미하고, /admin/reports 목록의
+		// flagged=true&status=ACTIVE 필터와도 같은 기준이다.
+		long flaggedReportCount =
+				queryLong("SELECT COUNT(*) FROM price_report WHERE flagged = true AND status = 'ACTIVE'");
 
 		long totalPossiblePairs = pharmacyCount * drugCount;
 		double coverageRate = totalPossiblePairs == 0
