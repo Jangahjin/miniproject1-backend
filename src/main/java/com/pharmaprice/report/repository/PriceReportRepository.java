@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.pharmaprice.report.domain.PriceReport;
+import com.pharmaprice.report.domain.ReportStatus;
 
 public interface PriceReportRepository extends JpaRepository<PriceReport, Long> {
 
@@ -22,9 +23,11 @@ public interface PriceReportRepository extends JpaRepository<PriceReport, Long> 
 			nativeQuery = true)
 	Double findMedianPriceByDrugId(@Param("drugId") long drugId);
 
-	// 목록 조회(docs/ROADMAP.md T-28). pharmacy/drug/user는 모두 단일값(@ManyToOne)
-	// 연관이라 JOIN FETCH + Pageable을 함께 써도 컬렉션 페치처럼 인메모리 페이징이
-	// 되지 않는다 — 안전하게 DB 레벨 LIMIT/OFFSET 페이징이 유지된다.
+	// 목록 조회(docs/ROADMAP.md T-28, T-32 공용). pharmacy/drug/user는 모두 단일값
+	// (@ManyToOne) 연관이라 JOIN FETCH + Pageable을 함께 써도 컬렉션 페치처럼
+	// 인메모리 페이징이 되지 않는다 — 안전하게 DB 레벨 LIMIT/OFFSET 페이징이 유지된다.
+	// JPQL(HQL) 파라미터는 Hibernate가 타입을 알고 바인딩하므로, native SQL에서
+	// AdminStatsRepository가 겪은 "전부 null이면 타입을 못 정한다" 문제가 없다.
 	@Query(
 			value = """
 					SELECT r FROM PriceReport r
@@ -34,6 +37,8 @@ public interface PriceReportRepository extends JpaRepository<PriceReport, Long> 
 					WHERE (:pharmacyId IS NULL OR r.pharmacy.id = :pharmacyId)
 					  AND (:drugId IS NULL OR r.drug.id = :drugId)
 					  AND (:userId IS NULL OR r.user.id = :userId)
+					  AND (:flagged IS NULL OR r.flagged = :flagged)
+					  AND (:status IS NULL OR r.status = :status)
 					ORDER BY r.createdAt DESC
 					""",
 			countQuery = """
@@ -41,10 +46,14 @@ public interface PriceReportRepository extends JpaRepository<PriceReport, Long> 
 					WHERE (:pharmacyId IS NULL OR r.pharmacy.id = :pharmacyId)
 					  AND (:drugId IS NULL OR r.drug.id = :drugId)
 					  AND (:userId IS NULL OR r.user.id = :userId)
+					  AND (:flagged IS NULL OR r.flagged = :flagged)
+					  AND (:status IS NULL OR r.status = :status)
 					""")
 	Page<PriceReport> search(
 			@Param("pharmacyId") Long pharmacyId,
 			@Param("drugId") Long drugId,
 			@Param("userId") Long userId,
+			@Param("flagged") Boolean flagged,
+			@Param("status") ReportStatus status,
 			Pageable pageable);
 }

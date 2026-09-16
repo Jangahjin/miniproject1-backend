@@ -127,7 +127,7 @@ public class PriceReportService {
 	public PageResponse<PriceReportListItemResponse> list(
 			Long pharmacyId, Long drugId, Long userId, int page, int size) {
 		Page<PriceReport> result =
-				priceReportRepository.search(pharmacyId, drugId, userId, PageRequest.of(page, size));
+				priceReportRepository.search(pharmacyId, drugId, userId, null, null, PageRequest.of(page, size));
 		return PageResponse.of(
 				result.getContent().stream().map(PriceReportListItemResponse::from).toList(),
 				page, size, result.getTotalElements());

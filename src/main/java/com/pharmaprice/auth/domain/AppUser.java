@@ -53,4 +53,9 @@ public class AppUser extends BaseTimeEntity {
 	public void incrementReportCount() {
 		this.reportCount++;
 	}
+
+	/** 관리자가 제보를 REJECTED로 바꿀 때 호출한다 (docs/ROADMAP.md T-32). */
+	public void decrementReportCount() {
+		this.reportCount = Math.max(0, this.reportCount - 1);
+	}
 }

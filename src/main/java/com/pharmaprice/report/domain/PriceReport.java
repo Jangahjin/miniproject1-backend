@@ -76,4 +76,23 @@ public class PriceReport extends BaseTimeEntity {
 
 	@Column(length = 200)
 	private String memo;
+
+	/** 관리자 제보 관리(docs/ROADMAP.md T-32)에서만 호출한다. */
+	public void changeStatus(ReportStatus status) {
+		this.status = status;
+	}
+
+	/**
+	 * flagged 해제 시 flagReason도 함께 지운다 — flagReason은 "왜 이상치로 표시됐는지"를
+	 * 나타내는 값이라 더 이상 이상치가 아니면 의미가 없다. 반대로 관리자가 수동으로
+	 * flagged=true를 걸었는데 flagReason이 비어 있으면 MANUAL로 채운다.
+	 */
+	public void changeFlagged(boolean flagged) {
+		this.flagged = flagged;
+		if (!flagged) {
+			this.flagReason = null;
+		} else if (this.flagReason == null) {
+			this.flagReason = FlagReason.MANUAL;
+		}
+	}
 }
