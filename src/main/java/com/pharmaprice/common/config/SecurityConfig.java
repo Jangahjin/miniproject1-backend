@@ -33,7 +33,8 @@ public class SecurityConfig {
 						.requestMatchers(
 								"/swagger-ui/**", "/swagger-ui.html",
 								"/v3/api-docs/**",
-								"/actuator/**")
+								"/actuator/**",
+								"/error") // 없으면 컨트롤러 500이 /error 포워드에서 401/403으로 둔갑해 원인 파악이 어려워진다.
 						.permitAll()
 						.requestMatchers(HttpMethod.GET, "/api/v1/drugs/**", "/api/v1/regions/**", "/api/v1/search/**")
 						.permitAll()
