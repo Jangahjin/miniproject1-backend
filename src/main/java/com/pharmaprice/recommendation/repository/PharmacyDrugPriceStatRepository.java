@@ -9,4 +9,6 @@ import com.pharmaprice.recommendation.domain.PharmacyDrugPriceStat;
 public interface PharmacyDrugPriceStatRepository extends JpaRepository<PharmacyDrugPriceStat, Long> {
 
 	Optional<PharmacyDrugPriceStat> findByPharmacyIdAndDrugId(Long pharmacyId, Long drugId);
+
+	void deleteByPharmacyIdAndDrugId(Long pharmacyId, Long drugId);
 }
