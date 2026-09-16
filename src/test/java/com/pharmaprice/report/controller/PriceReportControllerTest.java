@@ -23,7 +23,7 @@ import com.pharmaprice.AbstractIntegrationTest;
 import com.pharmaprice.drug.domain.Drug;
 import com.pharmaprice.drug.repository.DrugRepository;
 
-/** docs/ROADMAP.md T-26 완료 판정. */
+/** docs/ROADMAP.md T-26, T-28 완료 판정. */
 @AutoConfigureMockMvc
 class PriceReportControllerTest extends AbstractIntegrationTest {
 
@@ -181,5 +181,58 @@ class PriceReportControllerTest extends AbstractIntegrationTest {
 
 		mockMvc.perform(get("/api/v1/auth/me").header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
 				.andExpect(jsonPath("$.reportCount").value(1));
+	}
+
+	@Test
+	void 목록_응답에_제보자_이메일과_id가_없다() throws Exception {
+		Map<String, Object> stat = pickExistingStat();
+		long pharmacyId = ((Number) stat.get("pharmacy_id")).longValue();
+		long drugId = ((Number) stat.get("drug_id")).longValue();
+		int repPrice = ((Number) stat.get("rep_price")).intValue();
+
+		mockMvc.perform(post("/api/v1/price-reports")
+						.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"pharmacyId\":%d,\"drugId\":%d,\"price\":%d}"
+								.formatted(pharmacyId, drugId, repPrice)))
+				.andExpect(status().isCreated());
+
+		String listResponse = mockMvc.perform(get("/api/v1/price-reports")
+						.param("pharmacyId", String.valueOf(pharmacyId))
+						.param("drugId", String.valueOf(drugId)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.content[0].reporter.nickname").value("제보자"))
+				.andExpect(jsonPath("$.content[0].hasReceipt").value(false))
+				.andReturn().getResponse().getContentAsString();
+
+		assertThat(listResponse).doesNotContain("email").doesNotContain("\"userId\"").doesNotContain("receiptFileId");
+	}
+
+	@Test
+	void mine을_비로그인으로_호출하면_401을_반환한다() throws Exception {
+		mockMvc.perform(get("/api/v1/price-reports").param("mine", "true"))
+				.andExpect(status().isUnauthorized())
+				.andExpect(jsonPath("$.code").value("UNAUTHENTICATED"));
+	}
+
+	@Test
+	void mine을_로그인_상태로_호출하면_본인_제보만_보인다() throws Exception {
+		Map<String, Object> stat = pickExistingStat();
+		long pharmacyId = ((Number) stat.get("pharmacy_id")).longValue();
+		long drugId = ((Number) stat.get("drug_id")).longValue();
+		int repPrice = ((Number) stat.get("rep_price")).intValue();
+
+		mockMvc.perform(post("/api/v1/price-reports")
+						.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"pharmacyId\":%d,\"drugId\":%d,\"price\":%d}"
+								.formatted(pharmacyId, drugId, repPrice)))
+				.andExpect(status().isCreated());
+
+		mockMvc.perform(get("/api/v1/price-reports")
+						.param("mine", "true")
+						.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.content.length()", greaterThan(0)));
 	}
 }

@@ -5,11 +5,14 @@ import java.time.ZoneId;
 import java.util.Locale;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.pharmaprice.auth.domain.AppUser;
 import com.pharmaprice.auth.repository.AppUserRepository;
+import com.pharmaprice.common.dto.PageResponse;
 import com.pharmaprice.drug.domain.Drug;
 import com.pharmaprice.drug.exception.DrugNotFoundException;
 import com.pharmaprice.drug.repository.DrugRepository;
@@ -22,6 +25,7 @@ import com.pharmaprice.report.domain.FlagReason;
 import com.pharmaprice.report.domain.PriceReport;
 import com.pharmaprice.report.domain.ReportSource;
 import com.pharmaprice.report.domain.UploadedFile;
+import com.pharmaprice.report.dto.PriceReportListItemResponse;
 import com.pharmaprice.report.dto.PriceReportRequest;
 import com.pharmaprice.report.dto.PriceReportResponse;
 import com.pharmaprice.report.exception.DrugNotOtcException;
@@ -115,6 +119,18 @@ public class PriceReportService {
 				priceStatService.recalculate(request.pharmacyId(), request.drugId()).orElse(null);
 
 		return PriceReportResponse.of(report, stat, outlier.warning());
+	}
+
+	// docs/ROADMAP.md T-28. mine=true인데 비로그인이면 userId를 여기서 null로 넘기지 않고
+	// 컨트롤러가 미리 401을 던진다 — 이 메서드는 필터 조합만 신경 쓴다.
+	@Transactional(readOnly = true)
+	public PageResponse<PriceReportListItemResponse> list(
+			Long pharmacyId, Long drugId, Long userId, int page, int size) {
+		Page<PriceReport> result =
+				priceReportRepository.search(pharmacyId, drugId, userId, PageRequest.of(page, size));
+		return PageResponse.of(
+				result.getContent().stream().map(PriceReportListItemResponse::from).toList(),
+				page, size, result.getTotalElements());
 	}
 
 	private static void validateDateRange(LocalDate purchasedAt) {
