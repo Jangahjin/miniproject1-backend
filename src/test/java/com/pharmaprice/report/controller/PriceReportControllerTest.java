@@ -108,7 +108,9 @@ class PriceReportControllerTest extends AbstractIntegrationTest {
 		mockMvc.perform(post("/api/v1/price-reports")
 						.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
 						.contentType(MediaType.APPLICATION_JSON).content(body))
-				.andExpect(status().isConflict());
+				.andExpect(status().isConflict())
+				.andExpect(jsonPath("$.code").value("DUPLICATE_REPORT"))
+				.andExpect(jsonPath("$.message").value("오늘 이미 이 약국의 해당 약품 가격을 제보하셨습니다."));
 	}
 
 	@Test
