@@ -1,13 +1,10 @@
 package com.pharmaprice.report.exception;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
-
 /**
- * 전역 예외 처리(docs/ROADMAP.md T-35)가 붙기 전까지는 상태 코드만 맞춰준다.
- * 응답 바디를 docs/API.md §1.2 형식(code/message/traceId 등)으로 맞추는 건 T-35에서 한다.
+ * 상태 코드/응답 포맷은 GlobalExceptionHandler가 결정한다 (docs/ROADMAP.md T-35).
+ * {@link #getMessage()}에는 pharmacyId/drugId가 포함돼 있어 응답 메시지로는 쓰지
+ * 않는다 — GlobalExceptionHandler가 별도의 정제된 메시지를 쓴다.
  */
-@ResponseStatus(HttpStatus.CONFLICT)
 public class DuplicateReportException extends RuntimeException {
 
 	public DuplicateReportException(long pharmacyId, long drugId) {

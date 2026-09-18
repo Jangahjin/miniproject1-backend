@@ -52,3 +52,7 @@ recommendation:
 logging:
   level:
     org.hibernate: info
+  # traceId(TraceIdFilter가 MDC에 심음)를 로그 각 줄에 찍어, 에러 응답의 traceId로
+  # 서버 로그를 검색할 수 있게 한다 (docs/ROADMAP.md T-35).
+  pattern:
+    level: "%5p [traceId=%X{traceId:-}]"

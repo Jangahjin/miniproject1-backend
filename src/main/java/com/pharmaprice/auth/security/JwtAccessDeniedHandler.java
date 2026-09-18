@@ -7,6 +7,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 
+import com.pharmaprice.common.exception.ErrorCode;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import tools.jackson.databind.ObjectMapper;
@@ -25,6 +27,7 @@ public class JwtAccessDeniedHandler implements AccessDeniedHandler {
 	public void handle(
 			HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException)
 			throws IOException {
-		SecurityResponseWriter.write(response, objectMapper, HttpStatus.FORBIDDEN, "FORBIDDEN", "접근 권한이 없습니다.");
+		SecurityResponseWriter.write(
+				response, objectMapper, HttpStatus.FORBIDDEN, ErrorCode.FORBIDDEN.name(), ErrorCode.FORBIDDEN.message());
 	}
 }

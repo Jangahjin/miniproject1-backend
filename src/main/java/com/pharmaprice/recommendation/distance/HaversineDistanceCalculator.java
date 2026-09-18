@@ -11,6 +11,9 @@ import java.util.Set;
 
 import org.springframework.stereotype.Component;
 
+import com.pharmaprice.common.exception.InvalidCoordinateException;
+import com.pharmaprice.common.exception.InvalidRadiusException;
+
 @Component
 public class HaversineDistanceCalculator implements DistanceCalculator {
 
@@ -46,14 +49,13 @@ public class HaversineDistanceCalculator implements DistanceCalculator {
 
 	private static void validateRadius(int radiusM) {
 		if (!ALLOWED_RADII_M.contains(radiusM)) {
-			throw new IllegalArgumentException("허용되지 않는 반경입니다: " + radiusM);
+			throw new InvalidRadiusException(radiusM);
 		}
 	}
 
 	public static void validateCoordinate(double lat, double lng) {
 		if (lat < MIN_LAT || lat > MAX_LAT || lng < MIN_LNG || lng > MAX_LNG) {
-			throw new IllegalArgumentException(
-					"대한민국 범위를 벗어난 좌표입니다: lat=" + lat + ", lng=" + lng);
+			throw new InvalidCoordinateException(lat, lng);
 		}
 	}
 }

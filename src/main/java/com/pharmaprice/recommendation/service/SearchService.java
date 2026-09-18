@@ -68,12 +68,7 @@ public class SearchService {
 
 		Location location = resolveLocation(lat, lng, regionCode);
 
-		BoundingBox box;
-		try {
-			box = distanceCalculator.boundingBox(location.lat(), location.lng(), radius);
-		} catch (IllegalArgumentException e) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-		}
+		BoundingBox box = distanceCalculator.boundingBox(location.lat(), location.lng(), radius);
 
 		List<CandidateRow> rows = searchQueryRepository.findCandidates(
 				drugId, location.lat(), location.lng(), box, radius);

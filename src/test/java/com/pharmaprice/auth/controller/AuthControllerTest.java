@@ -100,6 +100,16 @@ class AuthControllerTest extends AbstractIntegrationTest {
 	}
 
 	@Test
+	void 잘못된_이메일_형식으로_가입하면_400_VALIDATION_FAILED를_반환한다() throws Exception {
+		String body = "{\"email\":\"not-an-email\",\"password\":\"Password123!\",\"nickname\":\"테스터\"}";
+
+		mockMvc.perform(post("/api/v1/auth/signup").contentType(MediaType.APPLICATION_JSON).content(body))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.code").value("VALIDATION_FAILED"))
+				.andExpect(jsonPath("$.fieldErrors[0].field").value("email"));
+	}
+
+	@Test
 	void 시드_admin_계정으로_로그인하면_role이_ADMIN이다() throws Exception {
 		mockMvc.perform(post("/api/v1/auth/login")
 						.contentType(MediaType.APPLICATION_JSON)

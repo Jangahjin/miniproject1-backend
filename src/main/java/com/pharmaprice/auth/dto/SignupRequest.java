@@ -7,10 +7,15 @@ import jakarta.validation.constraints.Size;
 
 /** POST /api/v1/auth/signup 요청 (docs/API.md §2). */
 public record SignupRequest(
-		@NotBlank @Email @Size(max = 255) String email,
-		@NotBlank @Size(min = 8, max = 64) @Pattern(
-				regexp = "^(?=.*[A-Za-z])(?=.*\\d).+$",
-				message = "비밀번호는 영문과 숫자를 모두 포함해야 합니다.")
+		@NotBlank(message = "{auth.email.required}")
+		@Email(message = "{auth.email.invalid}")
+		@Size(max = 255, message = "{auth.email.size}")
+		String email,
+		@NotBlank(message = "{auth.password.required}")
+		@Size(min = 8, max = 64, message = "{auth.password.size}")
+		@Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d).+$", message = "{auth.password.pattern}")
 		String password,
-		@NotBlank @Size(min = 2, max = 30) String nickname) {
+		@NotBlank(message = "{auth.nickname.required}")
+		@Size(min = 2, max = 30, message = "{auth.nickname.size}")
+		String nickname) {
 }

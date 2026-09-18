@@ -7,6 +7,8 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
+import com.pharmaprice.common.exception.ErrorCode;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import tools.jackson.databind.ObjectMapper;
@@ -26,6 +28,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 			HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
 			throws IOException {
 		SecurityResponseWriter.write(
-				response, objectMapper, HttpStatus.UNAUTHORIZED, "UNAUTHENTICATED", "인증이 필요합니다.");
+				response, objectMapper, HttpStatus.UNAUTHORIZED,
+				ErrorCode.UNAUTHENTICATED.name(), ErrorCode.UNAUTHENTICATED.message());
 	}
 }

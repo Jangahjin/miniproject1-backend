@@ -48,7 +48,7 @@ public class PharmacyController {
 					HttpStatus.BAD_REQUEST, "q 또는 lat/lng 중 하나는 필수입니다.");
 		}
 		if (hasLocation) {
-			validateCoordinate(lat, lng);
+			HaversineDistanceCalculator.validateCoordinate(lat, lng);
 		}
 
 		int clampedRadius = Math.clamp(radius, 1, MAX_RADIUS_M);
@@ -62,7 +62,7 @@ public class PharmacyController {
 			@RequestParam(required = false) Double lat,
 			@RequestParam(required = false) Double lng) {
 		if (lat != null && lng != null) {
-			validateCoordinate(lat, lng);
+			HaversineDistanceCalculator.validateCoordinate(lat, lng);
 		}
 		return pharmacyQueryRepository.findDetail(pharmacyId, lat, lng)
 				.orElseThrow(() -> new PharmacyNotFoundException(pharmacyId));
@@ -77,13 +77,5 @@ public class PharmacyController {
 			@RequestParam(defaultValue = "" + DEFAULT_HISTORY_DAYS) int days) {
 		int clampedDays = Math.clamp(days, 1, MAX_HISTORY_DAYS);
 		return pharmacyQueryRepository.findPriceHistory(pharmacyId, drugId, clampedDays);
-	}
-
-	private static void validateCoordinate(double lat, double lng) {
-		try {
-			HaversineDistanceCalculator.validateCoordinate(lat, lng);
-		} catch (IllegalArgumentException e) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-		}
 	}
 }

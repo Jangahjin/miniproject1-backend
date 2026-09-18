@@ -9,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.pharmaprice.auth.repository.AppUserRepository;
@@ -95,11 +93,5 @@ public class UploadController {
 
 		Resource resource = fileStorageService.load(file.getStoredPath());
 		return ResponseEntity.ok().contentType(MediaType.parseMediaType(file.getContentType())).body(resource);
-	}
-
-	@ExceptionHandler(MaxUploadSizeExceededException.class)
-	@ResponseStatus(HttpStatus.PAYLOAD_TOO_LARGE)
-	public void handleMaxUploadSizeExceeded() {
-		// 상태 코드만 맞춘다 (본문 포맷은 T-35에서 통일).
 	}
 }

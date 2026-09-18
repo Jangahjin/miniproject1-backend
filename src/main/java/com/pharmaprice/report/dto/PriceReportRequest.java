@@ -9,10 +9,13 @@ import jakarta.validation.constraints.Size;
 
 /** POST /api/v1/price-reports 요청 (docs/API.md §6). */
 public record PriceReportRequest(
-		@NotNull Long pharmacyId,
-		@NotNull Long drugId,
-		@NotNull @Min(100) @Max(200_000) Integer price,
+		@NotNull(message = "{report.pharmacyId.required}") Long pharmacyId,
+		@NotNull(message = "{report.drugId.required}") Long drugId,
+		@NotNull(message = "{report.price.required}")
+		@Min(value = 100, message = "{report.price.range}")
+		@Max(value = 200_000, message = "{report.price.range}")
+		Integer price,
 		LocalDate purchasedAt,
 		Long receiptFileId,
-		@Size(max = 200) String memo) {
+		@Size(max = 200, message = "{report.memo.size}") String memo) {
 }

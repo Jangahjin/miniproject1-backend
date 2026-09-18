@@ -6,6 +6,9 @@ import static org.assertj.core.api.Assertions.withinPercentage;
 
 import org.junit.jupiter.api.Test;
 
+import com.pharmaprice.common.exception.InvalidCoordinateException;
+import com.pharmaprice.common.exception.InvalidRadiusException;
+
 class HaversineDistanceCalculatorTest {
 
 	private final HaversineDistanceCalculator calculator = new HaversineDistanceCalculator();
@@ -51,12 +54,12 @@ class HaversineDistanceCalculatorTest {
 	@Test
 	void boundingBox_허용되지_않은_반경이면_예외() {
 		assertThatThrownBy(() -> calculator.boundingBox(37.5, 127.0, 1500))
-				.isInstanceOf(IllegalArgumentException.class);
+				.isInstanceOf(InvalidRadiusException.class);
 	}
 
 	@Test
 	void boundingBox_대한민국_범위_밖_좌표면_예외() {
 		assertThatThrownBy(() -> calculator.boundingBox(10.0, 127.0, 1000))
-				.isInstanceOf(IllegalArgumentException.class);
+				.isInstanceOf(InvalidCoordinateException.class);
 	}
 }
